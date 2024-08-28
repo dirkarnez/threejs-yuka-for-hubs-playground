@@ -26,19 +26,226 @@
 			"imports": {
 				"three": "https://dirkarnez.github.io/threejs-for-hubs/three.js-65b5105908f5f135cad25fed07e25f15f3876777/build/three.module.js",
 				"three/addons/": "https://dirkarnez.github.io/threejs-for-hubs/three.js-65b5105908f5f135cad25fed07e25f15f3876777/examples/jsm/",
-				"troika-three-text": "https://dirkarnez.github.io/threejs-for-hubs/troika-three-text.0.45.0.min.js"
+				"yuka": "https://mugen87.github.io/yuka/build/yuka.module.js"
 			}
 		}
-		
 	</script>
 </head>
 
 <body>
+	<!-- <script>
+		
+		/* "troika-three-text": "https://dirkarnez.github.io/threejs-for-hubs/troika-three-text.0.45.0.min.js" */
+		import * as YUKA from '../../build/yuka.module.js';
+		// import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.109/build/three.module.js';
+
+
+		import { Girl } from './src/Girl.js';
+		import { Collectible } from './src/Collectible.js';
+
+		let camera, scene, renderer;
+
+		let entityManager, time;
+
+		init();
+
+		function init() {
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0xa0a0a0 );
+			scene.fog = new THREE.Fog( 0xa0a0a0, 20, 40 );
+
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 200 );
+			camera.position.set( 0, 5, 15 );
+			camera.lookAt( scene.position );
+
+			//
+
+			const groundGeometry = new THREE.PlaneBufferGeometry( 150, 150 );
+			const groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
+
+			const groundMesh = new THREE.Mesh( groundGeometry, groundMaterial );
+			groundMesh.rotation.x = - Math.PI / 2;
+			groundMesh.matrixAutoUpdate = false;
+			groundMesh.receiveShadow = true;
+			groundMesh.updateMatrix();
+			scene.add( groundMesh );
+
+			//
+
+			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 0.6 );
+			hemiLight.position.set( 0, 100, 0 );
+			hemiLight.matrixAutoUpdate = false;
+			hemiLight.updateMatrix();
+			scene.add( hemiLight );
+
+		 	const dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+			dirLight.position.set( 4, 5, 5 );
+			dirLight.matrixAutoUpdate = false;
+			dirLight.updateMatrix();
+			dirLight.castShadow = true;
+			dirLight.shadow.camera.top = 10;
+			dirLight.shadow.camera.bottom = - 10;
+			dirLight.shadow.camera.left = - 10;
+			dirLight.shadow.camera.right = 10;
+			dirLight.shadow.camera.near = 0.1;
+			dirLight.shadow.camera.far = 20;
+			dirLight.shadow.mapSize.x = 2048;
+			dirLight.shadow.mapSize.y = 2048;
+			scene.add( dirLight );
+
+			// scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+
+			//
+
+			const loadingManager = new THREE.LoadingManager( () => {
+
+				const loadingScreen = document.getElementById( 'loading-screen' );
+
+				loadingScreen.classList.add( 'fade-out' );
+				loadingScreen.addEventListener( 'transitionend', onTransitionEnd );
+
+				animate();
+
+			} );
+
+			const glTFLoader = new GLTFLoader( loadingManager );
+			glTFLoader.load( 'model/yuka.glb', ( gltf ) => {
+
+				// add object to scene
+
+				const avatar = gltf.scene;
+				avatar.matrixAutoUpdate = false;
+				avatar.animations = gltf.animations;
+
+				avatar.traverse( ( object ) => {
+
+					if ( object.isMesh ) {
+
+						object.material.transparent = true;
+						object.material.opacity = 1;
+						object.material.alphaTest = 0.7;
+						object.material.side = THREE.DoubleSide;
+						object.castShadow = true;
+
+					}
+
+				} );
+
+				scene.add( avatar );
+
+				const mixer = new THREE.AnimationMixer( avatar );
+				const animations = new Map();
+
+				animations.set( 'IDLE', createAnimationAction( mixer, 'Character_Idle' ) );
+				animations.set( 'WALK', createAnimationAction( mixer, 'Character_Walk' ) );
+				animations.set( 'GATHER', createAnimationAction( mixer, 'Character_Gather' ) );
+				animations.set( 'RIGHT_TURN', createAnimationAction( mixer, 'Character_RightTurn' ) );
+				animations.set( 'LEFT_TURN', createAnimationAction( mixer, 'Character_LeftTurn' ) );
+
+				// game setup
+
+				entityManager = new YUKA.EntityManager();
+				time = new YUKA.Time();
+
+				const girl = new Girl( mixer, animations );
+				girl.setRenderComponent( avatar, sync );
+
+				scene.add( avatar );
+				entityManager.add( girl );
+
+				//
+
+				const collectibleGeometry = new THREE.BoxBufferGeometry( 0.2, 0.2, 0.2 );
+				collectibleGeometry.translate( 0, 0.1, 0 );
+				const collectibleMaterial = new THREE.MeshBasicMaterial( { color: 0x040404 } );
+
+				for ( let i = 0; i < 5; i ++ ) {
+
+					const collectibleMesh = new THREE.Mesh( collectibleGeometry, collectibleMaterial );
+					collectibleMesh.matrixAutoUpdate = false;
+					collectibleMesh.castShadow = true;
+
+					const collectible = new Collectible();
+					collectible.setRenderComponent( collectibleMesh, sync );
+					collectible.spawn();
+
+					scene.add( collectibleMesh );
+					entityManager.add( collectible );
+
+				}
+
+			} );
+
+			//
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.gammaOutput = true;
+			renderer.shadowMap.enabled = true;
+			document.body.appendChild( renderer.domElement );
+
+			//
+
+			window.addEventListener( 'resize', onWindowResize, false );
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+		}
+
+		function animate() {
+
+			requestAnimationFrame( animate );
+
+			const delta = time.update().getDelta();
+
+			entityManager.update( delta );
+
+			renderer.render( scene, camera );
+
+		}
+
+		function sync( entity, renderComponent ) {
+
+			renderComponent.matrix.copy( entity.worldMatrix );
+
+		}
+
+		function createAnimationAction( mixer, clip ) {
+
+			let action = mixer.clipAction( clip );
+			action.play();
+			action.enabled = false;
+
+			return action;
+
+		}
+
+		function onTransitionEnd( event ) {
+
+			event.target.remove();
+
+		}
+	</script> -->
 	
 	<script type="module">
 		import * as THREE from 'three';
+
 		import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+		import { Girl } from './Girl.js';
+		import { Collectible } from './Collectible.js';
+
 		//import * as troikaThreeText from "troika-three-text";
 		debugger;
 		// "troika-three-text": "https://cdn.jsdelivr.net/npm/troika-three-text@0.45.0/+esm"
@@ -53,7 +260,8 @@
 
 		// Create an empty scene
 		var scene = new THREE.Scene();
-		scene.background = new THREE.Color( 0x444444 );
+		scene.background = new THREE.Color( 0xa0a0a0 );
+		scene.fog = new THREE.Fog( 0xa0a0a0, 20, 40 );
 		
 		// Create a basic perspective camera
 		var camera = new THREE.PerspectiveCamera(1000, window.innerWidth / window.innerHeight, 0.1, 50);
@@ -92,35 +300,108 @@
 		scene.add( lights[ 2 ] );
 	
 		
-		const group = new THREE.Group();
+		// const group = new THREE.Group();
 
-		const geometry = new THREE.BufferGeometry();
-		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [], 3 ) );
+		// const geometry = new THREE.BufferGeometry();
+		// geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [], 3 ) );
 
-		const lineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.5 } );
-		const meshMaterial = new THREE.MeshPhongMaterial( { color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+		// const lineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0.5 } );
+		// const meshMaterial = new THREE.MeshPhongMaterial( { color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
 
-		group.add( new THREE.LineSegments( geometry, lineMaterial ) );
-		group.add( new THREE.Mesh( geometry, meshMaterial ) );
+		// group.add( new THREE.LineSegments( geometry, lineMaterial ) );
+		// group.add( new THREE.Mesh( geometry, meshMaterial ) );
 		
-		const data = {
-			width: 15,
-			height: 15,
-			depth: 15,
-			widthSegments: 1,
-			heightSegments: 1,
-			depthSegments: 1
-		};
+		// const data = {
+		// 	width: 15,
+		// 	height: 15,
+		// 	depth: 15,
+		// 	widthSegments: 1,
+		// 	heightSegments: 1,
+		// 	depthSegments: 1
+		// };
 		
-		group.children[ 0 ].geometry.dispose();
-		group.children[ 1 ].geometry.dispose();
+		// group.children[ 0 ].geometry.dispose();
+		// group.children[ 1 ].geometry.dispose();
 		
-		const boxGeometry = new THREE.BoxGeometry(data.width, data.height, data.depth, data.widthSegments, data.heightSegments, data.depthSegments);
+		// const boxGeometry = new THREE.BoxGeometry(data.width, data.height, data.depth, data.widthSegments, data.heightSegments, data.depthSegments);
 		
-		group.children[ 0 ].geometry = new THREE.WireframeGeometry( boxGeometry );
-		group.children[ 1 ].geometry = boxGeometry;
+		// group.children[ 0 ].geometry = new THREE.WireframeGeometry( boxGeometry );
+		// group.children[ 1 ].geometry = boxGeometry;
 	
-		scene.add(group);
+		// scene.add(group);
+			const groundGeometry = new THREE.PlaneBufferGeometry( 150, 150 );
+			const groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
+
+			const groundMesh = new THREE.Mesh( groundGeometry, groundMaterial );
+			groundMesh.rotation.x = - Math.PI / 2;
+			groundMesh.matrixAutoUpdate = false;
+			groundMesh.receiveShadow = true;
+			groundMesh.updateMatrix();
+			scene.add( groundMesh );
+			
+			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 0.6 );
+			hemiLight.position.set( 0, 100, 0 );
+			hemiLight.matrixAutoUpdate = false;
+			hemiLight.updateMatrix();
+			scene.add( hemiLight );
+
+		 	const dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+			dirLight.position.set( 4, 5, 5 );
+			dirLight.matrixAutoUpdate = false;
+			dirLight.updateMatrix();
+			dirLight.castShadow = true;
+			dirLight.shadow.camera.top = 10;
+			dirLight.shadow.camera.bottom = - 10;
+			dirLight.shadow.camera.left = - 10;
+			dirLight.shadow.camera.right = 10;
+			dirLight.shadow.camera.near = 0.1;
+			dirLight.shadow.camera.far = 20;
+			dirLight.shadow.mapSize.x = 2048;
+			dirLight.shadow.mapSize.y = 2048;
+			scene.add( dirLight );
+
+			const glTFLoader = new GLTFLoader();
+			glTFLoader.load( 'yuka.glb', ( gltf ) => {
+
+				// add object to scene
+				const avatar = gltf.scene;
+				avatar.matrixAutoUpdate = false;
+				avatar.animations = gltf.animations;
+
+				avatar.traverse( ( object ) => {
+					if ( object.isMesh ) {
+						object.material.transparent = true;
+						object.material.opacity = 1;
+						object.material.alphaTest = 0.7;
+						object.material.side = THREE.DoubleSide;
+						object.castShadow = true;
+					}
+				});
+
+				scene.add( avatar );
+
+				const girl = new Girl( mixer, animations );
+				girl.setRenderComponent( avatar, sync );
+
+				scene.add( avatar );
+
+				const mixer = new THREE.AnimationMixer( avatar );
+				const animations = new Map();
+				
+				//animations.set( 'IDLE', createAnimationAction( mixer, 'Character_Idle' ) );
+				animations.set( 'WALK', createAnimationAction( mixer, 'Character_Walk' ) );
+				
+			});
+
+			function createAnimationAction( mixer, clip ) {
+
+				let action = mixer.clipAction( clip );
+				action.play();
+				action.enabled = false;
+
+				return action;
+
+			}
 
 		// // Add cube to Scene
 
@@ -150,13 +431,16 @@
 			// group.rotation.y += 0.005;
 
 
+			// const delta = time.update().getDelta();
+			// entityManager.update( delta );
+
+
+
 			// Render the scene
 			renderer.render(scene, camera);
 		};
 
 		render();
-		
-		
 		
 		
 		
