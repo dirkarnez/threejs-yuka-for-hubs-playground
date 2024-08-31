@@ -264,8 +264,10 @@
 		scene.fog = new THREE.Fog( 0xa0a0a0, 20, 40 );
 		
 		// Create a basic perspective camera
-		var camera = new THREE.PerspectiveCamera(1000, window.innerWidth / window.innerHeight, 0.1, 50);
-		camera.position.z = 30;
+
+		const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
+		camera.position.set( 5, 2, 8 );
+
 
 		// Create a renderer with Antialiasing
 		var renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -299,6 +301,9 @@
 		scene.add( lights[ 1 ] );
 		scene.add( lights[ 2 ] );
 	
+		// The X axis is red. The Y axis is green. The Z axis is blue.
+		const axesHelper = new THREE.AxesHelper( 5 );
+		scene.add( axesHelper );
 		
 		// const group = new THREE.Group();
 
@@ -329,15 +334,15 @@
 		// group.children[ 1 ].geometry = boxGeometry;
 	
 		// scene.add(group);
-			const groundGeometry = new THREE.PlaneBufferGeometry( 150, 150 );
-			const groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
+			// const groundGeometry = new THREE.PlaneBufferGeometry( 150, 150 );
+			// const groundMaterial = new THREE.MeshPhongMaterial( { color: 0x999999 } );
 
-			const groundMesh = new THREE.Mesh( groundGeometry, groundMaterial );
-			groundMesh.rotation.x = - Math.PI / 2;
-			groundMesh.matrixAutoUpdate = false;
-			groundMesh.receiveShadow = true;
-			groundMesh.updateMatrix();
-			scene.add( groundMesh );
+			// const groundMesh = new THREE.Mesh( groundGeometry, groundMaterial );
+			// groundMesh.rotation.x = - Math.PI / 2;
+			// groundMesh.matrixAutoUpdate = false;
+			// groundMesh.receiveShadow = true;
+			// groundMesh.updateMatrix();
+			// scene.add( groundMesh );
 			
 			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 0.6 );
 			hemiLight.position.set( 0, 100, 0 );
@@ -394,32 +399,11 @@
 			});
 
 			function createAnimationAction( mixer, clip ) {
-
 				let action = mixer.clipAction( clip );
 				action.play();
 				action.enabled = false;
-
 				return action;
-
 			}
-
-		// // Add cube to Scene
-
-
-
-		// // add text
-		// const myText = new troikaThreeText.Text()
-		// scene.add(myText)
-
-		// myText.text = 'HELLO, WORLD!';
-		// myText.color = 0x000000;
-		// myText.fontSize = 2;
-		// myText.position.x = 0
-		// myText.position.y = 0
-		// myText.position.z = 0
-
-		// // Update the rendering:
-		// myText.sync()
 
 
 		// Render Loop
