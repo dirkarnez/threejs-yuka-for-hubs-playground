@@ -75,7 +75,8 @@ export function MyRender(scene, callback) {
 				entityManager.add( girl );
 
 				const collectibleGeometry = new THREE.BoxBufferGeometry( 0.2, 0.2, 0.2 );
-				collectibleGeometry.translate( 0, 0.1, 0 );
+				collectibleGeometry.translateX( 0, 0.1, 0 );
+                
 				const collectibleMaterial = new THREE.MeshBasicMaterial( { color: 0x040404 } );
 
 				for ( let i = 0; i < 5; i ++ ) {
