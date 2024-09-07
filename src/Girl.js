@@ -6,9 +6,7 @@ import { Vehicle, Think, ArriveBehavior } from "yuka";
 import { RestEvaluator, GatherEvaluator } from './Evaluators.js';
 
 class Girl extends Vehicle {
-
 	constructor( mixer, animations ) {
-
 		super();
 
 		this.maxTurnRate = Math.PI * 0.5;
@@ -20,10 +18,10 @@ class Girl extends Vehicle {
 		const idle = this.animations.get( 'IDLE' );
 		idle.enabled = true;
 
-		this.ui = {
-			currentGoal: document.getElementById( 'currentGoal' ),
-			currentSubgoal: document.getElementById( 'currentSubgoal' )
-		};
+		// this.ui = {
+		// 	currentGoal: document.getElementById( 'currentGoal' ),
+		// 	currentSubgoal: document.getElementById( 'currentSubgoal' )
+		// };
 
 		// goal-driven agent design
 
