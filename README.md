@@ -1,5 +1,5 @@
-[threejs-for-hubs-playground](https://dirkarnez.github.io/threejs-for-hubs-playground)
-====================================================================
+[threejs-yuka-for-hubs-playground](https://dirkarnez.github.io/threejs-yuka-for-hubs-playground)
+================================================================================================
 [Yuka | Goal-driven Agent Design](https://mugen87.github.io/yuka/examples/goal/)
 
 ### Using
