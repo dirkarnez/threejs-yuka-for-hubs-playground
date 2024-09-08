@@ -179,7 +179,7 @@ class FindNextCollectibleGoal extends Goal {
 	terminate() {
 
 		const owner = this.owner;
-
+		//AnimationAction
 		const turn = owner.animations.get( this.animationId );
 		turn.fadeOut( owner.crossFadeDuration );
 

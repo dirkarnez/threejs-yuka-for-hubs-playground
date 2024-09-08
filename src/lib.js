@@ -30,11 +30,6 @@ export function MyRender(scene, callback) {
     scene.add( groundMesh );
 
 
-
-
-
-
-
     const glTFLoader = new GLTFLoader(new THREE.LoadingManager(callback));
     glTFLoader.load( 'yuka.glb', ( gltf ) => {
         				// add object to scene
@@ -74,8 +69,8 @@ export function MyRender(scene, callback) {
 				scene.add( avatar );
 				entityManager.add( girl );
 
-				const collectibleGeometry = new THREE.BoxBufferGeometry( 0.2, 0.2, 0.2 );
-				collectibleGeometry.translateX( 0, 0.1, 0 );
+				const collectibleGeometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+				collectibleGeometry.translate( 0, 0.1, 0 );
                 
 				const collectibleMaterial = new THREE.MeshBasicMaterial( { color: 0x040404 } );
 
@@ -105,4 +100,9 @@ function createAnimationAction( mixer, clip ) {
 
 function sync( entity, renderComponent ) {
     renderComponent.matrix.copy( entity.worldMatrix );
+	renderComponent.matrixAutoUpdate = false;
+	renderComponent.updateMatrixWorld(true);	
 }
+
+
+
